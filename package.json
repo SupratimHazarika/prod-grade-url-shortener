@@ -1,0 +1,24 @@
+{
+  "name": "prod-grade-url-shortener",
+  "version": "1.0.0",
+  "description": "A production-grade URL shortener built with Node.js, focusing on correctness, scalability, caching, and abuse prevention.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SupratimHazarika/prod-grade-url-shortener.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SupratimHazarika/prod-grade-url-shortener/issues"
+  },
+  "homepage": "https://github.com/SupratimHazarika/prod-grade-url-shortener#readme",
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1"
+  }
+}
