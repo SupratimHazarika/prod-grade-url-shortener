@@ -1,13 +1,3 @@
-// createShortURL(originalUrl)
-// {
-//     return [shortUrl, originalURL]
-// }
-
-// resolveShortUrl(shortCode)
-// {
-//     return originalUrl or null
-// }
-
 const urlStore = new Map();
 let idCounter = 1;
 
