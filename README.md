@@ -170,3 +170,22 @@ Clean, intentional evolution
 This repository is designed so that:
 A senior engineer can open it, pause, and understand how the author thinks.
 That is the true success criteria of this project.
+
+## Current Status
+
+The URL shortener backend is now fully wired end-to-end using Express.
+
+### Implemented
+- Clean layered architecture (services, controllers, routes)
+- Dependency Injection via composition root
+- Unit-tested service and controller layers
+- Express wiring isolated at application boundary
+- End-to-end flow verified using curl
+
+### Verified Endpoints
+- POST /urls → create short URL
+- GET /:shortCode → redirect (302) or 404 if not found
+
+### Notes
+Persistence is currently in-memory.
+Database integration and indexing will be introduced in the next phase.
