@@ -1,39 +1,38 @@
-const urlStore = new Map();
-let idCounter = 1;
+function createUrlService(urlRepository){
+    let idCounter = 0;
 
-const BASE62_CHARS = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    function createShortUrl(originalUrl){
+        if(!originalUrl){
+            throw new Error('Invalid URL');
+        }
 
-function encodeBase62(num){
-    let encoded = '';
-    while (num > 0) {
-        encoded = BASE62_CHARS[num % 62] + encoded;
-        num = Math.floor(num / 62);
+        idCounter += 1
+        let shortCode = idCounter.toString();
+
+        const record = urlRepository.create({
+            id: idCounter, 
+            shortCode, 
+            originalUrl,
+        });
+        
+        return {
+            shortCode: record.shortCode,
+            originalUrl: record.originalUrl,
+        };
     }
-    return encoded;
-}
 
-function createShortUrl(originalUrl){
-    if (!originalUrl){
-        throw new Error('Invalid URL');
+    function resolveShortUrl(shortCode){
+        let record = urlRepository.findByShortCode(shortCode);
+        return record ? record.originalUrl : null;
     }
 
-    const id = idCounter++;
-    const shortCode = encodeBase62(id)
-    
-    urlStore.set(shortCode, originalUrl)
-    
-    return { shortCode, originalUrl }
+    return {
+        createShortUrl,
+        resolveShortUrl
+    }
 }
 
-function resolveShortUrl(shortCode){
-    return urlStore.get(shortCode) || null
-}
-
-module.exports = {
-    createShortUrl,
-    resolveShortUrl
-}
-
+module.exports = createUrlService;
 
 
 

@@ -1,25 +1,31 @@
-const { createShortUrl, resolveShortUrl } = require('../../src/services/url.service');
+const createUrlService = require('../../src/services/url.service');
+const InMemoryUrlRepository = require('../../src/repositories/url.repository');
 
 describe('URL service', () => {
+  let urlService;
 
-    test('should create a short URL for a valid URL', () => {
-        const result = createShortUrl('https://example.com');
+  beforeEach(() => {
+    const urlRepository = new InMemoryUrlRepository();
+    urlService = createUrlService(urlRepository);
+  });
 
-        expect(result.shortCode).toBeDefined();
-        expect(result.originalUrl).toBe('https://example.com');
-    });
+  test('should create a short URL for a valid URL', () => {
+    const result = urlService.createShortUrl('https://example.com');
 
-    test('Should resolve a previously created URL', () => {
-        const { shortCode } = createShortUrl('https://example.com');
-        const resolvedUrl = resolveShortUrl(shortCode);
+    expect(result.shortCode).toBeDefined();
+    expect(result.originalUrl).toBe('https://example.com');
+  });
 
-        expect(resolvedUrl).toBe('https://example.com');
-    });
+  test('should resolve a previously created URL', () => {
+    const { shortCode } = urlService.createShortUrl('https://example.com');
+    const resolvedUrl = urlService.resolveShortUrl(shortCode);
 
-    test('Should return null for non existant shortUrl', () => {
-        const resolvedUrl = resolveShortUrl('nonexistent');
+    expect(resolvedUrl).toBe('https://example.com');
+  });
 
-        expect(resolvedUrl).toBeNull();
-    });
+  test('should return null for non-existent short URL', () => {
+    const resolvedUrl = urlService.resolveShortUrl('nonexistent');
 
-})
+    expect(resolvedUrl).toBeNull();
+  });
+});
