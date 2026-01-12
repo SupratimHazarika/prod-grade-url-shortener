@@ -1,5 +1,5 @@
 function createShortUrlController(urlService) {
-    return function createShortUrl(req, res) {
+    return async function createShortUrl(req, res) {
         const { url } = req.body || {};
 
         if (!url || typeof url !== "string"){
@@ -18,16 +18,17 @@ function createShortUrlController(urlService) {
         }
 
         try {
-            result = urlService.createShortUrl(url)
+            const result = await urlService.createShortUrl(url)
             return res.status(201).json(result)
         } catch (error) {
+            console.log(error)
             return res.status(500).json({message: 'Internal server error'})
         }
     };
 }
 
 function redirectController(urlService){
-    return function redirect(req, res){
+    return async function redirect(req, res){
         const { shortCode } = req.params || {};
 
         if(!shortCode){
@@ -35,14 +36,15 @@ function redirectController(urlService){
         }
 
         try {
-            const originalURL = urlService.resolveShortUrl(shortCode)
+            const originalUrl = await urlService.resolveShortUrl(shortCode)
 
-            if(!originalURL){
+            if(!originalUrl){
                 return res.status(404).json({message: "Short URL not found"})
             }
 
-            return res.redirect(302, originalURL)
+            return res.redirect(302, originalUrl)
         } catch (error) {
+            console.log(error)
             return res.status(500).json({message : "Internal Server error"})
         }
     };

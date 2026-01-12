@@ -1,7 +1,7 @@
 function createUrlService(urlRepository){
     let idCounter = 0;
 
-    function createShortUrl(originalUrl){
+    async function createShortUrl(originalUrl){
         if(!originalUrl){
             throw new Error('Invalid URL');
         }
@@ -9,7 +9,7 @@ function createUrlService(urlRepository){
         idCounter += 1
         let shortCode = idCounter.toString();
 
-        const record = urlRepository.create({
+        const record = await urlRepository.create({
             id: idCounter, 
             shortCode, 
             originalUrl,
@@ -21,8 +21,8 @@ function createUrlService(urlRepository){
         };
     }
 
-    function resolveShortUrl(shortCode){
-        let record = urlRepository.findByShortCode(shortCode);
+    async function resolveShortUrl(shortCode){
+        let record = await urlRepository.findByShortCode(shortCode);
         return record ? record.originalUrl : null;
     }
 
