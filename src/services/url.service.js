@@ -1,24 +1,19 @@
+const { encodeBase62 } = require('../utils/base62');
+
 function createUrlService(urlRepository){
-    let idCounter = 0;
 
     async function createShortUrl(originalUrl){
         if(!originalUrl){
             throw new Error('Invalid URL');
         }
 
-        idCounter += 1
-        let shortCode = idCounter.toString();
-
-        const record = await urlRepository.create({
-            id: idCounter, 
-            shortCode, 
-            originalUrl,
-        });
+        const id = await urlRepository.create(originalUrl)
+        console.log(id,'kkklaa')
+        const shortCode = encodeBase62(id)
         
-        return {
-            shortCode: record.shortCode,
-            originalUrl: record.originalUrl,
-        };
+        await urlRepository.updateShortCode(id, shortCode)
+
+        return shortCode
     }
 
     async function resolveShortUrl(shortCode){
