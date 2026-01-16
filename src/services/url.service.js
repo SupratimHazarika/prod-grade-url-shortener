@@ -7,11 +7,9 @@ function createUrlService(urlRepository){
             throw new Error('Invalid URL');
         }
 
-        const id = await urlRepository.create(originalUrl)
-        console.log(id,'kkklaa')
+        const id = await urlRepository.getNextId()
         const shortCode = encodeBase62(id)
-        
-        await urlRepository.updateShortCode(id, shortCode)
+        await urlRepository.create({originalUrl, shortCode, id})
 
         return shortCode
     }

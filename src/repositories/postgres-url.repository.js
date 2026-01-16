@@ -1,24 +1,19 @@
 const pool = require("../config/db");
 
 class PostgresUrlRepository{
-    async create(originalUrl) {
-        const query = `INSERT INTO short_urls (original_url) 
-                       values($1)
-                       returning id
-                       `;
-
-        const result = await pool.query(query, [originalUrl])
-    
+    async getNextId(){
+        const query = `SELECT nextval('short_urls_id_seq') AS id`
+        const result = await pool.query(query)
         return result.rows[0].id;
     }
 
-    async updateShortCode(id, shortCode){
-        const query = `UPDATE short_urls
-                       SET short_code = $1
-                       WHERE id = $2
-                       `;
-                
-        await pool.query(query, [shortCode, id])
+    async create({originalUrl, shortCode, id}) {
+        const query = `
+            INSERT INTO short_urls (id, short_code, original_url) 
+            values($1, $2, $3) 
+        `;
+
+        await pool.query(query, [id, shortCode, originalUrl])
     }
 
     async findByShortCode(shortCode) {
