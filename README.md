@@ -189,3 +189,163 @@ The URL shortener backend is now fully wired end-to-end using Express.
 ### Notes
 Persistence is currently in-memory.
 Database integration and indexing will be introduced in the next phase.
+
+-- Persistence Layer (PostgreSQL):
+
+The system now uses PostgreSQL as the single source of truth for all URL mappings.
+
+Why PostgreSQL?
+
+1. Strong consistency guarantees
+2. Mature indexing and constraint support
+3. Familiar choice for production backend systems
+4. Clear mental model for transactions and invariants
+
+-- Database Schema
+
+CREATE TABLE short_urls (
+  id BIGSERIAL PRIMARY KEY,
+  short_code TEXT NOT NULL UNIQUE,
+  original_url TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Key Design Decisions
+
+1. id is generated using a Postgres sequence
+2. short_code is derived from id using Base62 encoding
+3. Insert is performed atomically with (id, short_code, original_url)
+4. Uniqueness is enforced at the database level
+
+This ensures:
+
+1. No short code collisions
+2. No race conditions
+3. Deterministic behavior under concurrency
+4. PostgreSQL remains the authoritative source of truth, even after introducing Redis.
+
+⚙️ Data Access Pattern
+
+1. The project follows a Repository abstraction for persistence:
+2. Services depend on repository interfaces, not database details
+3. Swapping storage layers does not affect business logic
+4. Makes the system easier to test and evolve
+
+This mirrors real-world production systems and maps cleanly to other stacks (e.g., JPA repositories in Spring).
+
+⚡ Redis Integration (Cache-Aside Strategy)
+
+-- Redis is introduced only for read optimization, never as a source of truth.
+
+Why Redis?
+
+1. Reduce database load on hot paths
+2. Improve redirect throughput
+3. Lower tail latency under load
+4. Caching Strategy
+
+-- Pattern: Cache-aside
+
+Cache key: short:<shortCode>
+TTL: 1 hour
+
+On redirect:
+1. Check Redis
+2. On hit → return immediately
+3. On miss → query Postgres, populate Redis, return
+
+-- If Redis is unavailable:
+
+1. The system falls back to PostgreSQL
+2. Correctness is never compromised
+3. Redis Client Optimization
+
+** During load testing, Redis client contention was observed under high concurrency.
+
+Fixes applied:
+
+1. Separate Redis connections for reads and writes
+2. Removal of logging from hot paths
+3. Explicit cache warming before benchmarks
+
+This mirrors real production tuning work and highlights that Redis usage patterns matter, not just Redis itself.
+
+📈 Load Testing & Benchmarking
+
+1. Performance testing was treated as a first-class engineering activity, not an afterthought.
+
+Tooling: -> 
+
+Tool: autocannon
+Scenario: Hot short-code repeatedly accessed
+Configuration:
+
+100 concurrent connections
+HTTP pipelining enabled
+30-second sustained run
+
+*** Results (Local) *** 
+***
+
+  Setup	Avg Latency	P99 Latency	Req/sec
+  DB-only	~81 ms	~99 ms	~12.2k
+  Redis optimized	~57 ms	~66 ms	~17.4k
+  Key Insight
+
+***
+
+  Adding Redis increased redirect throughput by ~40% and reduced P99 latency by ~33%.
+  After optimization, the system became HTTP / Node.js event-loop bound rather than database-bound.
+
+***
+
+This demonstrates:->
+
+1. Redis successfully removed Postgres from the hot path
+2. Performance bottlenecks shifted upward in the stack
+3. Caching improves scalability, not just raw speed
+
+Benchmarks were intentionally run locally to avoid cloud network noise.
+
+🛡️ Security & Abuse Considerations (Current + Planned)
+Already Implemented
+
+1. Strict URL validation
+2. Only http and https allowed
+3. Safe redirects (no open redirect injection)
+4. Explicit error handling for invalid inputs
+
+Planned (Next Phase)
+
+- Rate limiting (Redis-based)
+- Enumeration hardening
+- Abuse protection on URL creation
+- Security headers
+- Observability hooks (metrics, structured logs)
+
+Security is treated as an evolving design concern, not a bolt-on.
+
+🚧 Intentional Non-Goals (For Now)
+
+The following are explicitly deferred, not forgotten:
+
+1. UI / frontend
+2. Authentication
+3. Custom domains
+4. Analytics dashboard
+
+-- Cloud deployment benchmarks
+The focus of this repository is backend correctness, architecture, and reasoning.
+
+🧩 Why This Project Exists
+This repository is not meant to impress with features.
+
+It is meant to demonstrate: 
+1. How design decisions are made
+2. How trade-offs are documented
+3. How performance is measured, not assumed
+4. How systems evolve incrementally
+5. A senior engineer should be able to read this codebase and understand:
+
+*** how the developer thinks — not just what they built ***
+*** That is the success criteria of this project ***

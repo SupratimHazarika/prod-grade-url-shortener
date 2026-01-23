@@ -1,5 +1,5 @@
 const { encodeBase62 } = require('../utils/base62');
-const { redisClient } = require('../config/redis');
+const { redisReadClient, redisClient } = require('../config/redis');
 
 function createUrlService(urlRepository){
 
@@ -18,13 +18,10 @@ function createUrlService(urlRepository){
     async function resolveShortUrl(shortCode){
         const cacheKey = `short:${shortCode}`
 
-        const cachedUrl = await redisClient.get(cacheKey)
+        const cachedUrl = await redisReadClient.get(cacheKey)
         if(cachedUrl){
-            console.log('CACHE HIT')
             return cachedUrl
         }
-
-        console.log('CACHE MISS');
 
         let record = await urlRepository.findByShortCode(shortCode);
         if(!record) return null;
